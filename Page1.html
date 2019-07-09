@@ -25,7 +25,6 @@
             <div class="six columns">
                 <!--Graph-->
                 <div id='graph' style="height: 43vh"></div>
-                <!--<div id='graph2' style="width:450px; height:450px;"></div>-->
             </div>
 
             <!--Input Box & Sliders-->
@@ -44,9 +43,17 @@
                         <!--Slider N-->
                         <label class="slider">
                             <span class="sliderMin">-1</span>
-                            <input id="BetaController" class="inputs" type="range" value="0" min="-1" max="1" step="0.01">
+                            <input id="BetaController" class="inputs" type="range" value="1" min="-1" max="1" step="0.01">
                             <span class="sliderMax">1</span>
                         </label>
+                        <form>
+                            x:  
+                            <input name = "EventX" type = "text">
+                            ct:  
+                            <input name = "EventY" type = "text">
+                            <button id = "SubmitButton" type="button">Enter new event</button>
+                            <button id = "ClearButton" type = "button">Clear all events</button>
+                        </form>
                     </div>
                     <!--END Slider N-->
 
