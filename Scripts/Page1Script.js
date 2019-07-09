@@ -1,5 +1,8 @@
 /*jshint esversion: 7 */
 
+//Define shitty global variables
+var EventList = [];
+
 function setLayout(sometitlex, sometitley) {
     const new_layout = {
         autosize: true,
@@ -7,7 +10,7 @@ function setLayout(sometitlex, sometitley) {
         hovermode: "closest",
         showlegend: false,
         xaxis: {range: [-100, 100], zeroline: true, title: sometitlex},
-        yaxis: {range: [0, 100], zeroline: true, title: sometitley},
+        yaxis: {range: [-100, 100], zeroline: true, title: sometitley},
         aspectratio: {x: 1, y: 1}
     };
     return new_layout;
@@ -67,7 +70,23 @@ function GetNewInputs(){
     return [FrameBeta, ObjectBeta];
 }
 
-function Main(EventList = [], NewPlots = false){ 
+function AddPointsToGraphData(GraphData, EventList){
+    console.log(EventList.length);
+    for (i = 0; i < EventList.length; i++) {
+        GraphData.push(
+            {
+                type: "scatter",
+                mode: "points",
+                x: EventList[i][0],
+                y: EventList[i][1],
+                line: {color: "#960078", width: 3, dash: "dashed"},
+            }
+        );
+    }
+    return GraphData;
+}
+
+function Main(NewPlots = false){ 
     let NewInputs = GetNewInputs();
     let FrameBeta = NewInputs[0];
     let ObjectBeta = NewInputs[1];
@@ -84,7 +103,8 @@ function Main(EventList = [], NewPlots = false){
     AllYValues.push(ctDash_yValues);
     AllYValues.push(Object_yValues);
 
-    GraphData = GetAllGraphData(xValues, AllYValues);
+    let GraphData = GetAllGraphData(xValues, AllYValues);
+    GraphData = AddPointsToGraphData(GraphData, EventList);
 
     if (NewPlots){
         NewPlotAllGraphs(GraphData);
@@ -95,6 +115,7 @@ function Main(EventList = [], NewPlots = false){
 
 
 function ReactAllGraphs(GraphData){
+    //console.log(GraphData);
     Plotly.react("graph", GraphData, setLayout('x', 'ct'));  
     
 }
@@ -107,22 +128,30 @@ function NewPlotAllGraphs(GraphData){
 function Setup() {
     $('#FrameBetaController').on("input", function(){
         $("#" + $(this).attr("id") + "Display").text($(this).val() + $("#" + $(this).attr("id") + "Display").attr("data-unit"));
-        Main("cats");
+        Main();
     });
 
     $('#ObjectBetaController').on("input", function(){
         $("#" + $(this).attr("id") + "Display").text($(this).val() + $("#" + $(this).attr("id") + "Display").attr("data-unit"));
-        Main("cats");
+        Main();
     });
 
     $("#SubmitButton").on("click", function(){
         let EventX = parseFloat(document.getElementById("EventX").value);
         let EventY = parseFloat(document.getElementById("EventY").value);
-        Main([EventX, EventY]);
+        
+        EventList.push([EventX, EventY]);
+        console.log(EventList);
+        Main();
         //now clear box ready for new values.
     });
+
+    $("#ClearButton").on("click", function(){
+        EventList = [];
+        Main();
+    });
     
-    Main("cats", true);
+    Main(NewPlots = true);
 }
 
 $(document).ready(Setup); //Load setup when document is ready.
