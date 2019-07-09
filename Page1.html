@@ -38,12 +38,20 @@
                         <!--BEGIN Slider N-->
                         <!--Slider Display N-->
                         <label class="sliderTitle" style="padding-bottom:20px;">β:
-                            <span id="BetaControllerDisplay" data-unit="">0</span>
+                            <span id="FrameBetaControllerDisplay" data-unit="">0</span>
                         </label>
                         <!--Slider N-->
                         <label class="slider">
                             <span class="sliderMin">-1</span>
-                            <input id="BetaController" class="inputs" type="range" value="1" min="-1" max="1" step="0.01">
+                            <input id="FrameBetaController" class="inputs" type="range" value="0" min="-1" max="1" step="0.01">
+                            <span class="sliderMax">1</span>
+                        </label>  
+                        <label class="sliderTitle" style="padding-bottom:20px;">β:
+                            <span id="ObjectBetaControllerDisplay" data-unit="">0</span>
+                        </label>
+                        <label>
+                            <span class="sliderMin">-1</span>
+                            <input id="ObjectBetaController" class="inputs" type="range" value="0" min="-1" max="1" step="0.01">
                             <span class="sliderMax">1</span>
                         </label>
                         <form>

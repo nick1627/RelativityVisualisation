@@ -46,9 +46,7 @@ function GetStraightLineValues(xValues, m, c) {
 
 function GetAllGraphData(xValues, yValues) {
     let data = [];
-    // console.log("yvalues");
-    // console.log(yValues);
-    // console.log("yvalues ends ");
+    
     for (i = 0; i < yValues.length; i++) {
         data.push(
             {
@@ -60,29 +58,31 @@ function GetAllGraphData(xValues, yValues) {
             }
         );
     }
-    console.log(data);
     return data;
 }
 
 function GetNewInputs(){
-    let Beta = parseFloat(document.getElementById("BetaController").value);
-    return [Beta];
+    let FrameBeta = parseFloat(document.getElementById("FrameBetaController").value);
+    let ObjectBeta = parseFloat(document.getElementById("ObjectBetaController").value);
+    return [FrameBeta, ObjectBeta];
 }
 
-function Main(EventList, NewPlots = false){ 
-    console.log(EventList);
+function Main(EventList = [], NewPlots = false){ 
     let NewInputs = GetNewInputs();
-    let Beta = NewInputs[0];
+    let FrameBeta = NewInputs[0];
+    let ObjectBeta = NewInputs[1];
     //maybe try skipping updating if the value of the slider is different already.
     
     xValues = numeric.linspace(-100, 100, 1000);
 
-    xDash_yValues = GetStraightLineValues(xValues, Beta, 0);
-    ctDash_yValues = GetStraightLineValues(xValues, (1/Beta), 0);
+    xDash_yValues = GetStraightLineValues(xValues, FrameBeta, 0);
+    ctDash_yValues = GetStraightLineValues(xValues, (1/FrameBeta), 0);
+    Object_yValues = GetStraightLineValues(xValues, 1/ObjectBeta, 0);
 
     AllYValues = [xDash_yValues];
     //AllYValues = xDash_yValues;
     AllYValues.push(ctDash_yValues);
+    AllYValues.push(Object_yValues);
 
     GraphData = GetAllGraphData(xValues, AllYValues);
 
@@ -105,7 +105,12 @@ function NewPlotAllGraphs(GraphData){
 }
 
 function Setup() {
-    $('#BetaController').on("input", function(){
+    $('#FrameBetaController').on("input", function(){
+        $("#" + $(this).attr("id") + "Display").text($(this).val() + $("#" + $(this).attr("id") + "Display").attr("data-unit"));
+        Main("cats");
+    });
+
+    $('#ObjectBetaController').on("input", function(){
         $("#" + $(this).attr("id") + "Display").text($(this).val() + $("#" + $(this).attr("id") + "Display").attr("data-unit"));
         Main("cats");
     });
@@ -113,7 +118,8 @@ function Setup() {
     $("#SubmitButton").on("click", function(){
         let EventX = parseFloat(document.getElementById("EventX").value);
         let EventY = parseFloat(document.getElementById("EventY").value);
-        AddEvent(EventX, EventY);
+        Main([EventX, EventY]);
+        //now clear box ready for new values.
     });
     
     Main("cats", true);
