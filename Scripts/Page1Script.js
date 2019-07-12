@@ -47,20 +47,32 @@ function GetStraightLineValues(xValues, m, c) {
     return y;
 }
 
-function GetAllGraphData(xValues, yValues) {
+function GetAllGraphData(xValues, yValues, LineColours, EventList, EventColour) {
     let data = [];
     
-    for (i = 0; i < yValues.length; i++) {
+    for (i = 0; i < yValues.length; i++){
         data.push(
             {
                 type: "scatter",
                 mode: "lines",
                 x: xValues,
                 y: yValues[i],
-                line: {color: "#960078", width: 3, dash: "dashed"},
+                line: {color: LineColours[i], width: 3, dash: "dashed"},
             }
         );
     }
+    for (i = 0; i < EventList.length; i++){
+        data.push({
+            type: "scatter",
+            mode: "markers",
+            size: 1000,
+            color: EventColour,
+            x:  [EventList[i][0]],
+            y:  [EventList[i][1]]
+        });
+        //console.log(EventList)
+    }
+
     return data;
 }
 
@@ -70,27 +82,13 @@ function GetNewInputs(){
     return [FrameBeta, ObjectBeta];
 }
 
-function AddPointsToGraphData(GraphData, EventList){
-    console.log(EventList.length);
-    for (i = 0; i < EventList.length; i++) {
-        GraphData.push(
-            {
-                type: "scatter",
-                mode: "points",
-                x: EventList[i][0],
-                y: EventList[i][1],
-                line: {color: "#960078", width: 3, dash: "dashed"},
-            }
-        );
-    }
-    return GraphData;
-}
 
 function Main(NewPlots = false){ 
     let NewInputs = GetNewInputs();
     let FrameBeta = NewInputs[0];
     let ObjectBeta = NewInputs[1];
-    //maybe try skipping updating if the value of the slider is different already.
+    let format = [];
+    let colours = [];
     
     xValues = numeric.linspace(-100, 100, 1000);
 
@@ -99,12 +97,22 @@ function Main(NewPlots = false){
     Object_yValues = GetStraightLineValues(xValues, 1/ObjectBeta, 0);
 
     AllYValues = [xDash_yValues];
-    //AllYValues = xDash_yValues;
-    AllYValues.push(ctDash_yValues);
-    AllYValues.push(Object_yValues);
+    format.push("line");
+    colours.push("black");
 
-    let GraphData = GetAllGraphData(xValues, AllYValues);
-    GraphData = AddPointsToGraphData(GraphData, EventList);
+    AllYValues.push(ctDash_yValues);
+    format.push("line");
+    colours.push("black");
+
+    AllYValues.push(Object_yValues);
+    format.push("line");
+    colours.push("red");
+
+    EventColour = "blue";
+
+    let GraphData = GetAllGraphData(xValues, AllYValues, colours, EventList, EventColour);
+    //GraphData = AddPointsToGraphData(GraphData, EventList);
+    console.log(GraphData);
 
     if (NewPlots){
         NewPlotAllGraphs(GraphData);
