@@ -3,6 +3,24 @@
 //Define shitty global variables
 let EventList = [];
 
+
+class Event{
+    constructor(ct, x){
+        this.ct = ct;
+        this.x = x;
+    }
+
+    GetTransformedPosition(Beta, Gamma){
+        let ct = this.ct;
+        let x = this.x;
+    
+        let ctDash = Gamma*(ct - Beta*x);
+        let xDash = Gamma*(x - Beta*ct);
+    
+        return [ctDash, xDash];
+    }
+}
+
 function LorentzTransform(EventCoords, Beta, Gamma){
     let ct = EventCoords[0];
     let x = EventCoords[1];
