@@ -1,7 +1,7 @@
 /*jshint esversion: 7 */
 
 //Define shitty global variables
-var EventList = [];
+let EventList = [];
 
 function setLayout(sometitlex, sometitley) {
     const new_layout = {
@@ -17,7 +17,7 @@ function setLayout(sometitlex, sometitley) {
 }
 
 function GetGamma(Beta){
-    let Gamma = 1/(sqrt(1-Beta**2));
+    let Gamma = 1/(Math.sqrt(1-Beta**2));
     return Gamma;
 }
 
@@ -47,8 +47,39 @@ function GetStraightLineValues(xValues, m, c) {
     return y;
 }
 
-function GetAllGraphData(xValues, yValues, LineColours, EventList, EventColour) {
+function GetEventAxisPoints(EventList, Gamma, Beta){
+    //this function finds the ct, x coordinates of a point on the ct' or x' axis corresponding
+    //to an event
+    let ctDashPoints = [];
+    let xDashPoints = [];
+
+    for (i = 0; i < EventList.length; i++){
+        let xA = EventList[i][0];
+        let ctA = EventList[i][1];
+
+        let xDashB = 0;
+        let ctDashB = Gamma*(ctA - Beta*xA);
+        
+        let xDashC = Gamma*(xA - Beta*ctA);
+        let ctDashC = 0;
+
+        let xB = Gamma*Beta*ctDashB;
+        let ctB = Gamma*ctDashB;
+
+        let xC = Gamma*xDashC;
+        let ctC = Gamma*Beta*xDashC;
+
+        ctDashPoints.push([xB, ctB]);
+        xDashPoints.push([xC, ctC]);
+    }
+    
+    return [ctDashPoints, xDashPoints];
+}
+
+function GetAllGraphData(xValues, yValues, LineColours, EventList, EventColour, AxisPoints) {
     let data = [];
+    let ctDashAxis = AxisPoints[0];
+    let xDashAxis = AxisPoints[1];
     
     for (i = 0; i < yValues.length; i++){
         data.push(
@@ -61,16 +92,42 @@ function GetAllGraphData(xValues, yValues, LineColours, EventList, EventColour) 
             }
         );
     }
-    for (i = 0; i < EventList.length; i++){
-        data.push({
-            type: "scatter",
-            mode: "markers",
-            size: 1000,
-            color: EventColour,
-            x:  [EventList[i][0]],
-            y:  [EventList[i][1]]
-        });
-        //console.log(EventList)
+    if (EventList.length > 0){
+        
+
+        for (i = 0; i < EventList.length; i++){
+            data.push({
+                type: "scatter",
+                mode: "lines",
+                line: {
+                    dash: 'dash',
+                    width: 2,
+                    color: "blue"
+                },
+                x: [EventList[i][0], xDashAxis[i][0]],
+                y: [EventList[i][1], xDashAxis[i][1]]
+            });
+            data.push({
+                type: "scatter",
+                mode: "lines",
+                line: {
+                    dash: 'dash',
+                    width: 2,
+                    color: "blue"
+                },
+                x: [EventList[i][0], ctDashAxis[i][0]],
+                y: [EventList[i][1], ctDashAxis[i][1]]
+            });
+        }
+        for (i = 0; i < EventList.length; i++){
+            data.push({
+                type: "scatter",
+                mode: "markers",
+                marker: {size: 10, color: EventColour},
+                x:  [EventList[i][0]],
+                y:  [EventList[i][1]]
+            });
+        }
     }
 
     return data;
@@ -86,15 +143,17 @@ function GetNewInputs(){
 function Main(NewPlots = false){ 
     let NewInputs = GetNewInputs();
     let FrameBeta = NewInputs[0];
+    let FrameGamma = GetGamma(FrameBeta);
     let ObjectBeta = NewInputs[1];
     let format = [];
     let colours = [];
+    let EventColour = "blue";
     
-    xValues = numeric.linspace(-100, 100, 1000);
+    LineXValues = numeric.linspace(-100, 100, 2);
 
-    xDash_yValues = GetStraightLineValues(xValues, FrameBeta, 0);
-    ctDash_yValues = GetStraightLineValues(xValues, (1/FrameBeta), 0);
-    Object_yValues = GetStraightLineValues(xValues, 1/ObjectBeta, 0);
+    xDash_yValues = GetStraightLineValues(LineXValues, FrameBeta, 0);
+    ctDash_yValues = GetStraightLineValues(LineXValues, (1/FrameBeta), 0);
+    Object_yValues = GetStraightLineValues(LineXValues, (1/ObjectBeta), 0);
 
     AllYValues = [xDash_yValues];
     format.push("line");
@@ -108,11 +167,14 @@ function Main(NewPlots = false){
     format.push("line");
     colours.push("red");
 
-    EventColour = "blue";
+    
 
-    let GraphData = GetAllGraphData(xValues, AllYValues, colours, EventList, EventColour);
+    
+    let AxisPoints = GetEventAxisPoints(EventList, FrameGamma, FrameBeta);
+    //AxisPoints = [[[0,10],[50,50]],[[10,0],[60,60]]];
+
+    let GraphData = GetAllGraphData(LineXValues, AllYValues, colours, EventList, EventColour, AxisPoints);
     //GraphData = AddPointsToGraphData(GraphData, EventList);
-    console.log(GraphData);
 
     if (NewPlots){
         NewPlotAllGraphs(GraphData);
@@ -123,17 +185,19 @@ function Main(NewPlots = false){
 
 
 function ReactAllGraphs(GraphData){
-    //console.log(GraphData);
-    Plotly.react("graph", GraphData, setLayout('x', 'ct'));  
+    Plotly.react("graph1", GraphData, setLayout('x', 'ct'));  
+    Plotly.react("graph2", GraphData, setLayout('x', 'ct'));  
     
 }
 
 function NewPlotAllGraphs(GraphData){
-    Plotly.purge("graph");
-    Plotly.newPlot("graph", GraphData, setLayout('x', 'ct'));
+    Plotly.purge("graph1");
+    Plotly.newPlot("graph1", GraphData, setLayout('x', 'ct'));
+    Plotly.purge("graph2");
+    Plotly.newPlot("graph2", GraphData, setLayout('x', 'ct'));
 }
 
-function Setup() {
+function Setup(){
     $('#FrameBetaController').on("input", function(){
         $("#" + $(this).attr("id") + "Display").text($(this).val() + $("#" + $(this).attr("id") + "Display").attr("data-unit"));
         Main();
@@ -149,7 +213,6 @@ function Setup() {
         let EventY = parseFloat(document.getElementById("EventY").value);
         
         EventList.push([EventX, EventY]);
-        console.log(EventList);
         Main();
         //now clear box ready for new values.
     });
