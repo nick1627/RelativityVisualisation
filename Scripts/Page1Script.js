@@ -3,6 +3,16 @@
 //Define shitty global variables
 let EventList = [];
 
+function LorentzTransform(EventCoords, Beta, Gamma){
+    let ct = EventCoords[0];
+    let x = EventCoords[1];
+
+    let ctDash = Gamma*(ct - Beta*x);
+    let xDash = Gamma*(x - Beta*ct);
+
+    return [ctDash, xDash];
+}
+
 function setLayout(sometitlex, sometitley) {
     const new_layout = {
         autosize: true,
