@@ -71,6 +71,8 @@ class Event{
             x:  [xA],
             y:  [ctA]
         });
+
+        return DrawData;
     }
 
     //add something to allow getting plot data in both frames
@@ -229,19 +231,40 @@ function GetEventAxisPoints(EventList, Gamma, Beta){
 function GetAllGraphData(FrameA, FrameB, FrameBeta, FrameGamma, EventList){
     let GraphData1 = [];
     let GraphData2 = [];
+    let CurrentEvent;
+    let PointData;
 
-    GraphData1.push(FrameA.GetAxisData());
-    GraphData1.push(FrameB.GetAxisData(FrameBeta));
+    let AxisData;
+    AxisData = FrameA.GetAxisData(0);
+    GraphData1.push(AxisData[0]);
+    GraphData1.push(AxisData[1]);
 
-    GraphData2.push(FrameA.GetAxisData(-FrameBeta));
-    GraphData2.push(FrameB.GetAxisData());
+    AxisData = FrameA.GetAxisData(-FrameBeta);
+    GraphData2.push(AxisData[0]);
+    GraphData2.push(AxisData[1]);
+
+    AxisData = FrameB.GetAxisData(FrameBeta);
+    GraphData1.push(AxisData[0]);
+    GraphData1.push(AxisData[1]);
+
+    AxisData = FrameB.GetAxisData(0);
+    GraphData2.push(AxisData[0]);
+    GraphData2.push(AxisData[1]);
+
+    
 
     for (i = 0; i < EventList.length; i++){ //be careful about this object stuff taking forever
-        let CurrentEvent = new Event(EventList[i][1], EventList[i][0]);
-        GraphData1.push(CurrentEvent.GetDrawData(0, 1));
-        GraphData2.push(CurrentEvent.GetDrawData(FrameBeta, FrameGamma));//should only need beta?  maybe
-    }
+        CurrentEvent = new Event(EventList[i][1], EventList[i][0]);
+        PointData = CurrentEvent.GetDrawData(0, 1);
+        TransformedPointData = CurrentEvent.GetDrawData(FrameBeta, FrameGamma);//should only need beta?  maybe
 
+        GraphData1.push(PointData[0]);//consider doing this a better way
+        GraphData1.push(PointData[1]);
+        GraphData1.push(PointData[2]);
+        GraphData2.push(TransformedPointData[0]);
+        GraphData2.push(TransformedPointData[1]);
+        GraphData2.push(TransformedPointData[2]);
+    }
     return [GraphData1, GraphData2];
 }
 
