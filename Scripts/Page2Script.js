@@ -20,131 +20,7 @@ class Event{
         return [ctDash, xDash];
     }
 
-    GetDrawData(Gamma, Beta){
-        //this function finds the ct, x coordinates of a point on the ct' or x' axis corresponding
-        //to an event
-         
-        let xA = this.x;
-        let ctA = this.ct;
-
-        let xDashB = 0;
-        let ctDashB = Gamma*(ctA - Beta*xA);
-        
-        let xDashC = Gamma*(xA - Beta*ctA);
-        let ctDashC = 0;
-
-        let xB = Gamma*Beta*ctDashB;
-        let ctB = Gamma*ctDashB;
-
-        let xC = Gamma*xDashC;
-        let ctC = Gamma*Beta*xDashC;
-
-        let ctDashPoint = [xB, ctB];
-        let xDashPoint=[xC, ctC];
-
-        let DrawData = [];
-
-        DrawData.push({
-            type: "scatter",
-            mode: "lines",
-            line: {
-                dash: 'dash',
-                width: 2,
-                color: "blue"
-            },
-            x: [xA, xDashPoint[0]],
-            y: [ctA, xDashPoint[1]]
-        });
-
-        DrawData.push({
-            type: "scatter",
-            mode: "lines",
-            line: {
-                dash: 'dash',
-                width: 2,
-                color: "blue"
-            },
-            x: [xA, ctDashPoint[0]],
-            y: [ctA, ctDashPoint[1]]
-        });
-    
-        DrawData.push({
-            type: "scatter",
-            mode: "markers",
-            marker: {size: 10, color: EventColour},
-            x:  [xA],
-            y:  [ctA]
-        });
-    }
-
     //add something to allow getting plot data in both frames
-}
-
-class Frame{
-    constructor(xLimits, ctLimits){
-        //set up coordinates of endpoints of lines that make axes
-        this.N = [0,ctLimits[1]];
-        this.S = [0, ctLimits[0]];
-        this.W = [xLimits[0], 0];
-        this.E = [xLimits[1], 0];
-    }
-
-    GetAxisData(Beta = 0){
-        let North = this.N;
-        let South = this.S;
-        let West = this.W;
-        let East = this.E;
-
-        let Data = [];
-
-        let Gamma = this.GetGamma(Beta);
-
-        North = this.LorentzTransform(North, Beta, Gamma);
-        South = this.LorentzTransform(South, Beta, Gamma);
-        West = this.LorentzTransform(West, Beta, Gamma);
-        East = this.LorentzTransform(East, Beta, Gamma);
-
-        Data.push({
-            type: "scatter",
-            mode: "lines",
-            line: {
-                //dash: 'dash',
-                width: 2,
-                color: "black" //implement changeable colour
-            },
-            x: [South[0], North[0]],
-            y: [South[1], North[1]]
-        });
-
-        Data.push({
-            type: "scatter",
-            mode: "lines",
-            line: {
-                //dash: 'dash',
-                width: 2,
-                color: "black" //implement changeable colour
-            },
-            x: [West[0], East[0]],
-            y: [West[1], East[1]]
-        });
-       
-        return Data;
-    }
-
-    LorentzTransform(EventCoords, Beta, Gamma){
-        let ct = EventCoords[0];
-        let x = EventCoords[1];
-    
-        let ctDash = Gamma*(ct - Beta*x);
-        let xDash = Gamma*(x - Beta*ct);
-    
-        return [ctDash, xDash];
-    }
-
-    GetGamma(Beta){
-        let Gamma = 1/(Math.sqrt(1-Beta**2));
-        return Gamma;
-    }
 }
 
 function LorentzTransform(EventCoords, Beta, Gamma){
@@ -230,11 +106,7 @@ function GetEventAxisPoints(EventList, Gamma, Beta){
     return [ctDashPoints, xDashPoints];
 }
 
-function GetAllGraphData(){
-
-}
-
-function GetAllGraphData2(xValues, yValues, LineColours, EventList, EventColour, AxisPoints){
+function GetAllGraphData(xValues, yValues, LineColours, EventList, EventColour, AxisPoints) {
     let data = [];
     let ctDashAxis = AxisPoints[0];
     let xDashAxis = AxisPoints[1];
@@ -304,32 +176,23 @@ function AddEvent(EventCoords){
 
 }
 
-function GetTableData(MaxEvents){ //consider making the table an object...
+function GetTableData(){
     let Events = [];
     let x;
     let ct;
     let xDash;
     let ctDash;
+    for (let i = 1; i<=5; i++){
+        x =  parseFloat(document.getElementById("x" + toString(i)).innerHTML);
+        ct = parseFloat(document.getElementById("ct" + toString(i)).innerHTML);
+        xDash =  parseFloat(document.getElementById("x" + toString(i)).innerHTML);
+        ctDash = parseFloat(document.getElementById("ct" + toString(i)).innerHTML);
 
-    for (let i = 0; i<=(MaxEvents - 1); i++){
-        x =  parseFloat(document.getElementById("EventTable").rows[i].cells[0].innerHTML);
-        ct = parseFloat(document.getElementById("EventTable").rows[i].cells[1].innerHTML);
-        xDash =  parseFloat(document.getElementById("EventTable").rows[i].cells[2].innerHTML);
-        ctDash = parseFloat(document.getElementById("EventTable").rows[i].cells[3].innerHTML);
-        //document.getElementById("EventTable").rows[1].cells[1].innerHTML = 99;
         Events.push([x, ct, xDash, ctDash]);
     }
-
-    return Events;
+    console.log(Events);
 }
 
-function ClearTable(MaxEvents){
-    for (let i = 0; i< MaxEvents; i++){
-        for (let j = 0; j< 4; j++){
-            document.getElementById("EventTable").rows[i].cells[j].innerHTML = null;
-        }
-    }
-}
 
 
 function Main(NewPlots = false){ 
@@ -368,7 +231,7 @@ function Main(NewPlots = false){
     let GraphData = GetAllGraphData(LineXValues, AllYValues, colours, EventList, EventColour, AxisPoints);
     //GraphData = AddPointsToGraphData(GraphData, EventList);
 
-    GetTableData();
+    //GetTableData();
 
     if (NewPlots){
         NewPlotAllGraphs(GraphData);
@@ -378,16 +241,17 @@ function Main(NewPlots = false){
 }
 
 
-function ReactAllGraphs(GraphData1, GraphData2){
-    Plotly.react("graph1", GraphData1, setLayout("x", "ct"));  
-    Plotly.react("graph2", GraphData2, setLayout("x'", "ct'"));  
+function ReactAllGraphs(GraphData){
+    Plotly.react("graph1", GraphData, setLayout('x', 'ct'));  
+    Plotly.react("graph2", GraphData, setLayout('x', 'ct'));  
+    
 }
 
-function NewPlotAllGraphs(GraphData1, GraphData2){
+function NewPlotAllGraphs(GraphData){
     Plotly.purge("graph1");
-    Plotly.newPlot("graph1", GraphData1, setLayout("x", "ct"));
+    Plotly.newPlot("graph1", GraphData, setLayout('x', 'ct'));
     Plotly.purge("graph2");
-    Plotly.newPlot("graph2", GraphData2, setLayout("x'", "ct'"));
+    Plotly.newPlot("graph2", GraphData, setLayout('x', 'ct'));
 }
 
 function Setup(){
@@ -412,7 +276,7 @@ function Setup(){
     });
 
     $("#ClearButton").on("click", function(){
-        ClearTable();
+        EventList = [];
         Main();
     });
     
