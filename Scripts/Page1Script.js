@@ -1,9 +1,5 @@
 /*jshint esversion: 7 */
 
-//Define shitty global variables
-let EventList = [];
-
-
 class Event{
     constructor(ct, x){
         this.ct = ct;
@@ -71,7 +67,7 @@ class Event{
         DrawData.push({
             type: "scatter",
             mode: "markers",
-            marker: {size: 10, color: EventColour},
+            marker: {size: 10, color: "blue"},//make changeable colours
             x:  [xA],
             y:  [ctA]
         });
@@ -230,8 +226,23 @@ function GetEventAxisPoints(EventList, Gamma, Beta){
     return [ctDashPoints, xDashPoints];
 }
 
-function GetAllGraphData(){
+function GetAllGraphData(FrameA, FrameB, FrameBeta, FrameGamma, EventList){
+    let GraphData1 = [];
+    let GraphData2 = [];
 
+    GraphData1.push(FrameA.GetAxisData());
+    GraphData1.push(FrameB.GetAxisData(FrameBeta));
+
+    GraphData2.push(FrameA.GetAxisData(-FrameBeta));
+    GraphData2.push(FrameB.GetAxisData());
+
+    for (i = 0; i < EventList.length; i++){ //be careful about this object stuff taking forever
+        let CurrentEvent = new Event(EventList[i][1], EventList[i][0]);
+        GraphData1.push(CurrentEvent.GetDrawData(0, 1));
+        GraphData2.push(CurrentEvent.GetDrawData(FrameBeta, FrameGamma));//should only need beta?  maybe
+    }
+
+    return [GraphData1, GraphData2];
 }
 
 function GetAllGraphData2(xValues, yValues, LineColours, EventList, EventColour, AxisPoints){
@@ -311,12 +322,12 @@ function GetTableData(MaxEvents){ //consider making the table an object...
     let xDash;
     let ctDash;
 
-    for (let i = 0; i<=(MaxEvents - 1); i++){
+    for (let i = 0; i < MaxEvents; i++){
         x =  parseFloat(document.getElementById("EventTable").rows[i].cells[0].innerHTML);
         ct = parseFloat(document.getElementById("EventTable").rows[i].cells[1].innerHTML);
         xDash =  parseFloat(document.getElementById("EventTable").rows[i].cells[2].innerHTML);
         ctDash = parseFloat(document.getElementById("EventTable").rows[i].cells[3].innerHTML);
-        //document.getElementById("EventTable").rows[1].cells[1].innerHTML = 99;
+
         Events.push([x, ct, xDash, ctDash]);
     }
 
@@ -337,43 +348,29 @@ function Main(NewPlots = false){
     let FrameBeta = NewInputs[0];
     let FrameGamma = GetGamma(FrameBeta);
     let ObjectBeta = NewInputs[1];
+
+    let MaxEvents = 5;
+    let EventList = GetTableData(MaxEvents);
+
     let format = [];
     let colours = [];
     let EventColour = "blue";
-    
-    LineXValues = numeric.linspace(-100, 100, 2);
 
-    xDash_yValues = GetStraightLineValues(LineXValues, FrameBeta, 0);
-    ctDash_yValues = GetStraightLineValues(LineXValues, (1/FrameBeta), 0);
-    Object_yValues = GetStraightLineValues(LineXValues, (1/ObjectBeta), 0);
-
-    AllYValues = [xDash_yValues];
-    format.push("line");
-    colours.push("black");
-
-    AllYValues.push(ctDash_yValues);
-    format.push("line");
-    colours.push("black");
-
-    AllYValues.push(Object_yValues);
-    format.push("line");
-    colours.push("red");
-
+    let xMax = 100;
+    let ctMax = 100;
     
 
-    
-    let AxisPoints = GetEventAxisPoints(EventList, FrameGamma, FrameBeta);
-    //AxisPoints = [[[0,10],[50,50]],[[10,0],[60,60]]];
+    let FrameA = new Frame([-xMax, xMax], [-ctMax, ctMax]);
+    let FrameB = new Frame([-xMax, xMax], [-ctMax, ctMax]);
 
-    let GraphData = GetAllGraphData(LineXValues, AllYValues, colours, EventList, EventColour, AxisPoints);
-    //GraphData = AddPointsToGraphData(GraphData, EventList);
-
-    GetTableData();
+    let GraphData = GetAllGraphData(FrameA, FrameB, FrameBeta, FrameGamma, EventList);//LineXValues, AllYValues, colours, EventList, EventColour, AxisPoints);
+    let GraphData1 = GraphData[0];
+    let GraphData2 = GraphData[1];
 
     if (NewPlots){
-        NewPlotAllGraphs(GraphData);
+        NewPlotAllGraphs(GraphData1, GraphData2);
     }else{
-        ReactAllGraphs(GraphData);
+        ReactAllGraphs(GraphData1, GraphData2);
     }
 }
 
@@ -405,10 +402,8 @@ function Setup(){
         let ct = parseFloat(document.getElementById("EventX").value);
         let x = parseFloat(document.getElementById("EventY").value);
         
-        //EventList.push([EventX, EventY]);
         AddEvent([ct, x]);
         Main();
-        //now clear box ready for new values.
     });
 
     $("#ClearButton").on("click", function(){
