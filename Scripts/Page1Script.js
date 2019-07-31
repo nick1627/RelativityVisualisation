@@ -1,9 +1,17 @@
 /*jshint esversion: 7 */
 
 class Event{
-    constructor(ct, x){
-        this.ct = ct;
-        this.x = x;
+    constructor(ct, x, Betas){
+        //Betas is an array!!! it should include 0 
+        // this.ct = ct;
+        // this.x = x;
+        //this.Position = [ct, x];
+
+        this.Betas = Betas;
+        //console.log(this.Betas);
+        this.Gammas = this.GetGammas(this.Betas);
+
+        this.Positions = this.GetTransformedPositions(ct, x, this.Betas, this.Gammas);
     }
 
     GetTransformedPosition(Beta, Gamma){
@@ -16,66 +24,134 @@ class Event{
         return [ctDash, xDash];
     }
 
-    GetDrawData(Gamma, Beta){
+    GetTransformedPositions(ct, x, Betas, Gammas){
+
+        let ctDash;
+        let xDash;
+        
+        let ATransformedPosition;
+        let TransformedPositions = [];
+
+        for (let i = 0; i<Betas.length; i++){
+            ctDash = Gammas[i]*(ct - Betas[i]*x);
+            xDash = Gammas[i]*(x - Betas[i]*ct);
+            ATransformedPosition = [ctDash, xDash];
+            TransformedPositions.push(ATransformedPosition);
+        }
+        return TransformedPositions;
+    }
+
+    GetGammas(Betas){
+        //console.log(Betas);
+        let Gammas = [];
+        let CurrentGamma;
+        //.log(Betas.length);
+        for (let i = 0; i < Betas.length; i++){
+            //let i = 0;
+            CurrentGamma = 1/(Math.sqrt(1-((Betas[i])**2)));
+            Gammas.push(CurrentGamma);
+            // i = 1;
+            // CurrentGamma = 1/(Math.sqrt(1-((Betas[i])**2)));
+            // Gammas.push(CurrentGamma);
+        }
+        //console.log(Gammas);
+        return Gammas;
+    }
+
+    GetDrawData(){
         //this function finds the ct, x coordinates of a point on the ct' or x' axis corresponding
         //to an event
-         
-        let xA = this.x;
-        let ctA = this.ct;
-
-        let xDashB = 0;
-        let ctDashB = Gamma*(ctA - Beta*xA);
-        
-        let xDashC = Gamma*(xA - Beta*ctA);
-        let ctDashC = 0;
-
-        let xB = Gamma*Beta*ctDashB;
-        let ctB = Gamma*ctDashB;
-
-        let xC = Gamma*xDashC;
-        let ctC = Gamma*Beta*xDashC;
-
-        let ctDashPoint = [xB, ctB];
-        let xDashPoint=[xC, ctC];
-
+        let Positions = this.Positions;
+        let Betas = this.Betas;
+        let Gammas = this.Gammas;
         let DrawData = [];
 
-        DrawData.push({
-            type: "scatter",
-            mode: "lines",
-            line: {
-                dash: 'dash',
-                width: 2,
-                color: "blue"
-            },
-            x: [xA, xDashPoint[0]],
-            y: [ctA, xDashPoint[1]]
-        });
+        let ctA;
+        let xA;
+        let xDashB;
+        let ctDashB;
+        let xDashC;
+        let ctDashC;
+        let xB;
+        let ctB;
+        let xC;
+        let ctC;
+        let ctDashPoint;
+        let xDashPoint;
 
-        DrawData.push({
-            type: "scatter",
-            mode: "lines",
-            line: {
-                dash: 'dash',
-                width: 2,
-                color: "blue"
-            },
-            x: [xA, ctDashPoint[0]],
-            y: [ctA, ctDashPoint[1]]
-        });
-    
-        DrawData.push({
-            type: "scatter",
-            mode: "markers",
-            marker: {size: 10, color: "blue"},//make changeable colours
-            x:  [xA],
-            y:  [ctA]
-        });
+        //console.log(Betas);
+
+        for (let i = 0; i < Betas.length; i++){
+            ctA = Positions[i][0];
+            xA = Positions[i][1];
+
+            xDashB = 0;
+            ctDashB = Gammas[i]*(ctA - Betas[i]*xA);
+            
+            xDashC = Gammas[i]*(xA - Betas[i]*ctA);
+            ctDashC = 0;
+
+            xB = Gammas[i]*Betas[i]*ctDashB;
+            ctB = Gammas[i]*ctDashB;
+
+            xC = Gammas[i]*xDashC;
+            ctC = Gammas[i]*Betas[i]*xDashC;
+
+            ctDashPoint = [xB, ctB];
+            xDashPoint=[xC, ctC];
+
+            
+
+            DrawData.push({
+                type: "scatter",
+                mode: "lines",
+                line: {
+                    dash: 'dash',
+                    width: 2,
+                    color: "blue"
+                },
+                x: [xA, xDashPoint[0]],
+                y: [ctA, xDashPoint[1]]
+            });
+
+            DrawData.push({
+                type: "scatter",
+                mode: "lines",
+                line: {
+                    dash: 'dash',
+                    width: 2,
+                    color: "blue"
+                },
+                x: [xA, ctDashPoint[0]],
+                y: [ctA, ctDashPoint[1]]
+            });
+            
+            // if (TransformPoint){
+            //     let TransformedPosition = this.GetTransformedPosition(Beta, Gamma);
+            //     DrawData.push({
+            //         type: "scatter",
+            //         mode: "markers",
+            //         marker: {size: 10, color: "blue"},//make changeable colours
+            //         x:  [TransformedPosition[1]],
+            //         y:  [TransformedPosition[0]]
+            //     });
+            // }else{
+
+            DrawData.push({
+                type: "scatter",
+                mode: "markers",
+                marker: {size: 10, color: "blue"},//make changeable colours
+                x:  [xA],
+                y:  [ctA]
+            });
+
+            //}
+        }
 
         return DrawData;
     }
 
-    //add something to allow getting plot data in both frames
+    // //add something to allow getting plot data in both frames
 }
 
 class Frame{
@@ -110,8 +186,8 @@ class Frame{
                 width: 2,
                 color: "black" //implement changeable colour
             },
-            x: [South[0], North[0]],
-            y: [South[1], North[1]]
+            x: [South[1], North[1]],
+            y: [South[0], North[0]]
         });
 
         Data.push({
@@ -122,8 +198,8 @@ class Frame{
                 width: 2,
                 color: "black" //implement changeable colour
             },
-            x: [West[0], East[0]],
-            y: [West[1], East[1]]
+            x: [West[1], East[1]],
+            y: [West[0], East[0]]
         });
        
         return Data;
@@ -173,61 +249,6 @@ function GetGamma(Beta){
     return Gamma;
 }
 
-// convert the string to a numerical function
-function GetYValues(xValues, Gradient) { 
-    //computes the y values for given x values
-    let y = [];
-    for (var i in xValues) {
-        x = xValues[i];  
-        y.push(Gradient*x);
-    }
-    return y;
-}
-
-function GetStraightLineValues(xValues, m, c) { 
-    //computes the y values for given x values
-    let y = [];
-
-    if (m == "inf"){
-        //figure out what to do here
-    }else{
-        for (let i in xValues) {
-            x = xValues[i];  
-            y.push(m*x + c);
-        }
-    }
-    return y;
-}
-
-function GetEventAxisPoints(EventList, Gamma, Beta){
-    //this function finds the ct, x coordinates of a point on the ct' or x' axis corresponding
-    //to an event
-    let ctDashPoints = [];
-    let xDashPoints = [];
-
-    for (i = 0; i < EventList.length; i++){
-        let xA = EventList[i][0];
-        let ctA = EventList[i][1];
-
-        let xDashB = 0;
-        let ctDashB = Gamma*(ctA - Beta*xA);
-        
-        let xDashC = Gamma*(xA - Beta*ctA);
-        let ctDashC = 0;
-
-        let xB = Gamma*Beta*ctDashB;
-        let ctB = Gamma*ctDashB;
-
-        let xC = Gamma*xDashC;
-        let ctC = Gamma*Beta*xDashC;
-
-        ctDashPoints.push([xB, ctB]);
-        xDashPoints.push([xC, ctC]);
-    }
-    
-    return [ctDashPoints, xDashPoints];
-}
-
 function GetAllGraphData(FrameA, FrameB, FrameBeta, FrameGamma, EventList){
     let GraphData1 = [];
     let GraphData2 = [];
@@ -239,11 +260,11 @@ function GetAllGraphData(FrameA, FrameB, FrameBeta, FrameGamma, EventList){
     GraphData1.push(AxisData[0]);
     GraphData1.push(AxisData[1]);
 
-    AxisData = FrameA.GetAxisData(-FrameBeta);
+    AxisData = FrameA.GetAxisData(FrameBeta);
     GraphData2.push(AxisData[0]);
     GraphData2.push(AxisData[1]);
 
-    AxisData = FrameB.GetAxisData(FrameBeta);
+    AxisData = FrameB.GetAxisData(-FrameBeta);
     GraphData1.push(AxisData[0]);
     GraphData1.push(AxisData[1]);
 
@@ -251,94 +272,38 @@ function GetAllGraphData(FrameA, FrameB, FrameBeta, FrameGamma, EventList){
     GraphData2.push(AxisData[0]);
     GraphData2.push(AxisData[1]);
 
-    
+    //console.log(EventList.length);
 
-    for (i = 0; i < EventList.length; i++){ //be careful about this object stuff taking forever
-        CurrentEvent = new Event(EventList[i][1], EventList[i][0]);
-        PointData = CurrentEvent.GetDrawData(0, 1);
-        TransformedPointData = CurrentEvent.GetDrawData(FrameBeta, FrameGamma);//should only need beta?  maybe
+    for (let i = 0; i < EventList.length; i++){ //be careful about this object stuff taking forever
+        CurrentEvent = new Event(EventList[i][1], EventList[i][0], [FrameBeta]);
+        //CurrentEvent = new Event(50, 30, [0, 0.7]);
+        PointData = CurrentEvent.GetDrawData();
 
         GraphData1.push(PointData[0]);//consider doing this a better way
         GraphData1.push(PointData[1]);
         GraphData1.push(PointData[2]);
-        GraphData2.push(TransformedPointData[0]);
-        GraphData2.push(TransformedPointData[1]);
-        GraphData2.push(TransformedPointData[2]);
-    }
-    return [GraphData1, GraphData2];
-}
-
-function GetAllGraphData2(xValues, yValues, LineColours, EventList, EventColour, AxisPoints){
-    let data = [];
-    let ctDashAxis = AxisPoints[0];
-    let xDashAxis = AxisPoints[1];
-    
-    for (i = 0; i < yValues.length; i++){
-        data.push(
-            {
-                type: "scatter",
-                mode: "lines",
-                x: xValues,
-                y: yValues[i],
-                line: {color: LineColours[i], width: 3, dash: "dashed"},
-            }
-        );
-    }
-    if (EventList.length > 0){
+        GraphData2.push(PointData[3]);//consider doing this a better way
+        GraphData2.push(PointData[4]);
+        GraphData2.push(PointData[5]);
         
-
-        for (i = 0; i < EventList.length; i++){
-            data.push({
-                type: "scatter",
-                mode: "lines",
-                line: {
-                    dash: 'dash',
-                    width: 2,
-                    color: "blue"
-                },
-                x: [EventList[i][0], xDashAxis[i][0]],
-                y: [EventList[i][1], xDashAxis[i][1]]
-            });
-            data.push({
-                type: "scatter",
-                mode: "lines",
-                line: {
-                    dash: 'dash',
-                    width: 2,
-                    color: "blue"
-                },
-                x: [EventList[i][0], ctDashAxis[i][0]],
-                y: [EventList[i][1], ctDashAxis[i][1]]
-            });
-        }
-        for (i = 0; i < EventList.length; i++){
-            data.push({
-                type: "scatter",
-                mode: "markers",
-                marker: {size: 10, color: EventColour},
-                x:  [EventList[i][0]],
-                y:  [EventList[i][1]]
-            });
-        }
     }
-
-    return data;
+    console.log(GraphData1);
+    console.log(GraphData2);
+    return [GraphData1, GraphData2];
 }
 
 function GetNewInputs(){
     let FrameBeta = parseFloat(document.getElementById("FrameBetaController").value);
-    let ObjectBeta = parseFloat(document.getElementById("ObjectBetaController").value);
-    return [FrameBeta, ObjectBeta];
+    ///let ObjectBeta = parseFloat(document.getElementById("ObjectBetaController").value);
+    return FrameBeta;
 }
 
 function AddEvent(EventCoords){
-    let EventA = new Event(EventCoords);
+    //let EventA = new Event(EventCoords);
     //AddToEventTable(EventA);
-
-
 }
 
-function GetTableData(MaxEvents){ //consider making the table an object...
+function GetAllEvents(MaxEvents){ //consider making the table an object...
     let Events = [];
     let x;
     let ct;
@@ -357,7 +322,7 @@ function GetTableData(MaxEvents){ //consider making the table an object...
     return Events;
 }
 
-function ClearTable(MaxEvents){
+function ClearEvents(MaxEvents){
     for (let i = 0; i< MaxEvents; i++){
         for (let j = 0; j< 4; j++){
             document.getElementById("EventTable").rows[i].cells[j].innerHTML = null;
@@ -367,26 +332,25 @@ function ClearTable(MaxEvents){
 
 
 function Main(NewPlots = false){ 
-    let NewInputs = GetNewInputs();
-    let FrameBeta = NewInputs[0];
+    let FrameBeta = GetNewInputs();
     let FrameGamma = GetGamma(FrameBeta);
-    let ObjectBeta = NewInputs[1];
 
     let MaxEvents = 5;
-    let EventList = GetTableData(MaxEvents);
+    let EventList = GetAllEvents(MaxEvents);
+    // let NumberOfEvents = EventList.length;
 
-    let format = [];
-    let colours = [];
-    let EventColour = "blue";
+    // let format = [];
+    // let colours = [];
+    // let EventColour = "blue";
 
     let xMax = 100;
     let ctMax = 100;
-    
 
     let FrameA = new Frame([-xMax, xMax], [-ctMax, ctMax]);
     let FrameB = new Frame([-xMax, xMax], [-ctMax, ctMax]);
 
-    let GraphData = GetAllGraphData(FrameA, FrameB, FrameBeta, FrameGamma, EventList);//LineXValues, AllYValues, colours, EventList, EventColour, AxisPoints);
+    let GraphData = GetAllGraphData(FrameA, FrameB, FrameBeta, FrameGamma, EventList);
+    //console.log(GraphData);
     let GraphData1 = GraphData[0];
     let GraphData2 = GraphData[1];
 
@@ -425,12 +389,12 @@ function Setup(){
         let ct = parseFloat(document.getElementById("EventX").value);
         let x = parseFloat(document.getElementById("EventY").value);
         
-        AddEvent([ct, x]);
+        //AddEvent([ct, x]);
         Main();
     });
 
     $("#ClearButton").on("click", function(){
-        ClearTable();
+        ClearEvents();
         Main();
     });
     
