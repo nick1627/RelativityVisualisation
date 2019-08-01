@@ -2,13 +2,7 @@
 
 class Event{
     constructor(ct, x, Betas){
-        //Betas is an array!!! it should include 0 
-        // this.ct = ct;
-        // this.x = x;
-        //this.Position = [ct, x];
-
         this.Betas = Betas;
-        //console.log(this.Betas);
         this.Gammas = this.GetGammas(this.Betas);
 
         this.Positions = this.GetTransformedPositions(ct, x, this.Betas, this.Gammas);
@@ -42,19 +36,12 @@ class Event{
     }
 
     GetGammas(Betas){
-        //console.log(Betas);
         let Gammas = [];
         let CurrentGamma;
-        //.log(Betas.length);
         for (let i = 0; i < Betas.length; i++){
-            //let i = 0;
             CurrentGamma = 1/(Math.sqrt(1-((Betas[i])**2)));
             Gammas.push(CurrentGamma);
-            // i = 1;
-            // CurrentGamma = 1/(Math.sqrt(1-((Betas[i])**2)));
-            // Gammas.push(CurrentGamma);
         }
-        //console.log(Gammas);
         return Gammas;
     }
 
@@ -79,11 +66,11 @@ class Event{
         let ctDashPoint;
         let xDashPoint;
 
-        //console.log(Betas);
 
         for (let i = 0; i < Betas.length; i++){
             ctA = Positions[i][0];
             xA = Positions[i][1];
+
 
             xDashB = 0;
             ctDashB = Gammas[i]*(ctA - Betas[i]*xA);
@@ -155,12 +142,13 @@ class Event{
 }
 
 class Frame{
-    constructor(xLimits, ctLimits){
+    constructor(xLimits, ctLimits, FrameColour){
         //set up coordinates of endpoints of lines that make axes
         this.N = [0,ctLimits[1]];
         this.S = [0, ctLimits[0]];
         this.W = [xLimits[0], 0];
         this.E = [xLimits[1], 0];
+        this.FrameColour = FrameColour;
     }
 
     GetAxisData(Beta = 0){
@@ -168,6 +156,7 @@ class Frame{
         let South = this.S;
         let West = this.W;
         let East = this.E;
+        let FrameColour = this.FrameColour;
 
         let Data = [];
 
@@ -184,7 +173,7 @@ class Frame{
             line: {
                 //dash: 'dash',
                 width: 2,
-                color: "black" //implement changeable colour
+                color: FrameColour //implement changeable colour
             },
             x: [South[1], North[1]],
             y: [South[0], North[0]]
@@ -196,7 +185,7 @@ class Frame{
             line: {
                 //dash: 'dash',
                 width: 2,
-                color: "black" //implement changeable colour
+                color: FrameColour //implement changeable colour
             },
             x: [West[1], East[1]],
             y: [West[0], East[0]]
@@ -221,15 +210,7 @@ class Frame{
     }
 }
 
-function LorentzTransform(EventCoords, Beta, Gamma){
-    let ct = EventCoords[0];
-    let x = EventCoords[1];
 
-    let ctDash = Gamma*(ct - Beta*x);
-    let xDash = Gamma*(x - Beta*ct);
-
-    return [ctDash, xDash];
-}
 
 function setLayout(sometitlex, sometitley) {
     const new_layout = {
@@ -272,11 +253,8 @@ function GetAllGraphData(FrameA, FrameB, FrameBeta, FrameGamma, EventList){
     GraphData2.push(AxisData[0]);
     GraphData2.push(AxisData[1]);
 
-    //console.log(EventList.length);
-
     for (let i = 0; i < EventList.length; i++){ //be careful about this object stuff taking forever
-        CurrentEvent = new Event(EventList[i][1], EventList[i][0], [FrameBeta]);
-        //CurrentEvent = new Event(50, 30, [0, 0.7]);
+        CurrentEvent = new Event(EventList[i][1], EventList[i][0], [0, FrameBeta]);
         PointData = CurrentEvent.GetDrawData();
 
         GraphData1.push(PointData[0]);//consider doing this a better way
@@ -287,8 +265,7 @@ function GetAllGraphData(FrameA, FrameB, FrameBeta, FrameGamma, EventList){
         GraphData2.push(PointData[5]);
         
     }
-    console.log(GraphData1);
-    console.log(GraphData2);
+ 
     return [GraphData1, GraphData2];
 }
 
@@ -298,9 +275,27 @@ function GetNewInputs(){
     return FrameBeta;
 }
 
-function AddEvent(EventCoords){
-    //let EventA = new Event(EventCoords);
-    //AddToEventTable(EventA);
+function AddEvent(ct, x){
+    let MaxEvents = 5;
+    let FrameBeta = GetNewInputs();
+    let Betas = [0, FrameBeta];
+    let NewEvent = new Event(ct, x, Betas);
+
+    let CurrentEvents = GetAllEvents(MaxEvents);
+    let RowToFill = CurrentEvents.length + 1;
+    console.log("currentevents");
+    console.log(CurrentEvents);
+    console.log("number of events");
+    console.log(CurrentEvents.length);
+    console.log("row to fill");
+    console.log(RowToFill);
+
+    if (RowToFill <= MaxEvents){
+        document.getElementById("EventTable").rows[RowToFill].cells[0].innerHTML = NewEvent.Positions[0][0];
+        document.getElementById("EventTable").rows[RowToFill].cells[1].innerHTML = NewEvent.Positions[0][1];
+        document.getElementById("EventTable").rows[RowToFill].cells[2].innerHTML = NewEvent.Positions[1][0];
+        document.getElementById("EventTable").rows[RowToFill].cells[3].innerHTML = NewEvent.Positions[1][1];
+    }
 }
 
 function GetAllEvents(MaxEvents){ //consider making the table an object...
@@ -310,20 +305,22 @@ function GetAllEvents(MaxEvents){ //consider making the table an object...
     let xDash;
     let ctDash;
 
-    for (let i = 0; i < MaxEvents; i++){
+    for (let i = 1; i < (MaxEvents+1); i++){
         x =  parseFloat(document.getElementById("EventTable").rows[i].cells[0].innerHTML);
         ct = parseFloat(document.getElementById("EventTable").rows[i].cells[1].innerHTML);
         xDash =  parseFloat(document.getElementById("EventTable").rows[i].cells[2].innerHTML);
         ctDash = parseFloat(document.getElementById("EventTable").rows[i].cells[3].innerHTML);
 
-        Events.push([x, ct, xDash, ctDash]);
+        if (!(isNaN(x) && isNaN(ct) && isNaN(xDash) && isNaN(ctDash))){
+            Events.push([x, ct, xDash, ctDash]);
+        }
     }
 
     return Events;
 }
 
 function ClearEvents(MaxEvents){
-    for (let i = 0; i< MaxEvents; i++){
+    for (let i = 1; i<= MaxEvents; i++){
         for (let j = 0; j< 4; j++){
             document.getElementById("EventTable").rows[i].cells[j].innerHTML = null;
         }
@@ -346,11 +343,10 @@ function Main(NewPlots = false){
     let xMax = 100;
     let ctMax = 100;
 
-    let FrameA = new Frame([-xMax, xMax], [-ctMax, ctMax]);
-    let FrameB = new Frame([-xMax, xMax], [-ctMax, ctMax]);
+    let FrameA = new Frame([-xMax, xMax], [-ctMax, ctMax], "blue");
+    let FrameB = new Frame([-xMax, xMax], [-ctMax, ctMax], "green");
 
     let GraphData = GetAllGraphData(FrameA, FrameB, FrameBeta, FrameGamma, EventList);
-    //console.log(GraphData);
     let GraphData1 = GraphData[0];
     let GraphData2 = GraphData[1];
 
@@ -386,15 +382,18 @@ function Setup(){
     });
 
     $("#SubmitButton").on("click", function(){
+        console.log("adding event");
         let ct = parseFloat(document.getElementById("EventX").value);
         let x = parseFloat(document.getElementById("EventY").value);
         
-        //AddEvent([ct, x]);
+        AddEvent(ct, x);
+
         Main();
     });
 
     $("#ClearButton").on("click", function(){
-        ClearEvents();
+        MaxEvents = 5;
+        ClearEvents(MaxEvents);
         Main();
     });
     
