@@ -1,11 +1,145 @@
 /*jshint esversion: 7 */
 
+class SpaceTimeDiagram{
+    constructor(Name, Frames, Events, FrameID){
+        this.Name = Name;//name of graph to link to html
+        this.Frames = Frames;//an array of frames
+        this.Events = Events;//an array of events
+        this.FrameID = FrameID;  //assigns a particular frame to be the frame of this diagram
+        //this.FrameColourList = FrameColourList;
+    }
+
+    GetGraphData(){
+        let Frames = this.Frames;
+        let Events = this.Events;
+        
+        let DiagramData = [];
+
+        for (let i = 0; i<Frames.length; i++){
+            DiagramData.push(Frames[i].GetPlotData());
+        }
+        for (let j = 0; j<Events.length; j++){
+            DiagramData.push(Events[i].GetPlotData());
+        }
+
+        return DiagramData;
+    }
+
+    // UpdateBetas(NewBetas){
+    //     this.Betas = NewBetas;
+    // }
+    UpdateFrames(NewFrames){//is this the right way of doing this?
+        this.Frames = NewFrames;
+    }
+
+    UpdateEvents(NewEvents){
+        this.Events = NewEvents;
+    }
+
+    NewPlot(DiagramData){
+        Plotly.purge(this.Name);
+
+        let xLabel = this.Frames[this.FrameID].AxisNames[0];
+        let ctLabel = this.Frames[this.FrameID].AxisNames[1];
+
+        Plotly.newPlot(this.Name, DiagramData, setLayout(xLabel, ctLabel));
+    }
+
+    React(DiagramData){
+        let xLabel = this.Frames[this.FrameID].AxisNames[0];
+        let ctLabel = this.Frames[this.FrameID].AxisNames[1];
+        
+        Plotly.react(this.Name, DiagramData, setLayout(xLabel, ctLabel));
+    }
+}
+
+class Frame{
+    constructor(xLimits, ctLimits, FrameColour, AxisNames){
+        //set up coordinates of endpoints of lines that make axes
+        this.N = [0,ctLimits[1]];
+        this.S = [0, ctLimits[0]];
+        this.W = [xLimits[0], 0];
+        this.E = [xLimits[1], 0];
+        this.FrameColour = FrameColour;
+        this.AxisNames = AxisNames; //an array of two strings, x axis name then ct axis name.
+    }
+
+    GetPlotData(Beta = 0){
+        let North = this.N;
+        let South = this.S;
+        let West = this.W;
+        let East = this.E;
+        let FrameColour = this.FrameColour;
+
+        let Data = [];
+
+        let Gamma = this.GetGamma(Beta);
+
+        North = this.LorentzTransform(North, Beta, Gamma);
+        South = this.LorentzTransform(South, Beta, Gamma);
+        West = this.LorentzTransform(West, Beta, Gamma);
+        East = this.LorentzTransform(East, Beta, Gamma);
+
+        Data.push({
+            type: "scatter",
+            mode: "lines",
+            line: {
+                //dash: 'dash',
+                width: 2,
+                color: FrameColour //implement changeable colour
+            },
+            x: [South[1], North[1]],
+            y: [South[0], North[0]]
+        });
+
+        Data.push({
+            type: "scatter",
+            mode: "lines",
+            line: {
+                //dash: 'dash',
+                width: 2,
+                color: FrameColour //implement changeable colour
+            },
+            x: [West[1], East[1]],
+            y: [West[0], East[0]]
+        });
+       
+        return Data;
+    }
+
+    LorentzTransform(EventCoords, Beta, Gamma){
+        let ct = EventCoords[0];
+        let x = EventCoords[1];
+    
+        let ctDash = Gamma*(ct - Beta*x);
+        let xDash = Gamma*(x - Beta*ct);
+    
+        return [ctDash, xDash];
+    }
+
+    GetGamma(Beta){
+        let Gamma = 1/(Math.sqrt(1-Beta**2));
+        return Gamma;
+    }
+}
+
 class Event{
-    constructor(ct, x, Betas){
+    constructor(ID, ct, x, Betas){
+        this.ID = ID; //assigns the row in the table
         this.Betas = Betas;
         this.Gammas = this.GetGammas(this.Betas);
 
         this.Positions = this.GetTransformedPositions(ct, x, this.Betas, this.Gammas);
+
+        this.RefreshTable(this.ID, this.Positions);
+    }
+
+    RefreshTable(ID, Positions){
+        document.getElementById("EventTable").rows[this.ID].cells[0].innerHTML = this.Positions[0][0];
+        document.getElementById("EventTable").rows[this.ID].cells[1].innerHTML = this.Positions[0][1];
+        document.getElementById("EventTable").rows[this.ID].cells[2].innerHTML = this.Positions[1][0];
+        document.getElementById("EventTable").rows[this.ID].cells[3].innerHTML = this.Positions[1][1];//this needs improving
+        //for any amount of betas.
     }
 
     GetTransformedPosition(Beta, Gamma){
@@ -45,7 +179,7 @@ class Event{
         return Gammas;
     }
 
-    GetDrawData(){
+    GetPlotData(){
         //this function finds the ct, x coordinates of a point on the ct' or x' axis corresponding
         //to an event
         let Positions = this.Positions;
@@ -141,74 +275,6 @@ class Event{
     // //add something to allow getting plot data in both frames
 }
 
-class Frame{
-    constructor(xLimits, ctLimits, FrameColour){
-        //set up coordinates of endpoints of lines that make axes
-        this.N = [0,ctLimits[1]];
-        this.S = [0, ctLimits[0]];
-        this.W = [xLimits[0], 0];
-        this.E = [xLimits[1], 0];
-        this.FrameColour = FrameColour;
-    }
-
-    GetAxisData(Beta = 0){
-        let North = this.N;
-        let South = this.S;
-        let West = this.W;
-        let East = this.E;
-        let FrameColour = this.FrameColour;
-
-        let Data = [];
-
-        let Gamma = this.GetGamma(Beta);
-
-        North = this.LorentzTransform(North, Beta, Gamma);
-        South = this.LorentzTransform(South, Beta, Gamma);
-        West = this.LorentzTransform(West, Beta, Gamma);
-        East = this.LorentzTransform(East, Beta, Gamma);
-
-        Data.push({
-            type: "scatter",
-            mode: "lines",
-            line: {
-                //dash: 'dash',
-                width: 2,
-                color: FrameColour //implement changeable colour
-            },
-            x: [South[1], North[1]],
-            y: [South[0], North[0]]
-        });
-
-        Data.push({
-            type: "scatter",
-            mode: "lines",
-            line: {
-                //dash: 'dash',
-                width: 2,
-                color: FrameColour //implement changeable colour
-            },
-            x: [West[1], East[1]],
-            y: [West[0], East[0]]
-        });
-       
-        return Data;
-    }
-
-    LorentzTransform(EventCoords, Beta, Gamma){
-        let ct = EventCoords[0];
-        let x = EventCoords[1];
-    
-        let ctDash = Gamma*(ct - Beta*x);
-        let xDash = Gamma*(x - Beta*ct);
-    
-        return [ctDash, xDash];
-    }
-
-    GetGamma(Beta){
-        let Gamma = 1/(Math.sqrt(1-Beta**2));
-        return Gamma;
-    }
-}
 
 
 
@@ -357,6 +423,9 @@ function Main(NewPlots = false){
     }
 }
 
+// function UpdateEventValues(EventList){
+//     //need to keep values in table updating.
+// }
 
 function ReactAllGraphs(GraphData1, GraphData2){
     Plotly.react("graph1", GraphData1, setLayout("x", "ct"));  
