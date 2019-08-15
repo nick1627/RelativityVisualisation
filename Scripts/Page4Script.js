@@ -37,8 +37,45 @@ class SpaceTimeDiagram{
         let PlotData = [];
 
         let Temporary;
+
+
+        // for (let i = 0; i< Events.length; i++){
+        //     for (let j = 0; j< Betas.length; j++){
+        //         let PointPosition = Events[i].GetTransformedPosition(Betas[j], Gammas[j]);
+        //         let ctAxisPosition = Events[i].AxisPoints[0];
+        //         let xAxisPosition = Events[i].AxisPoints[1];
+        //         ctAxisPosition = LorentzTransform(ctAxisPosition, Betas[j], Gammas[j]);
+        //         xAxisPosition = LorentzTransform(xAxisPosition, Betas[j], Gammas[j]);
+
+                
+
+        //         PlotData.push({//push dotted line stuff
+        //             type: "scatter",
+        //             mode: "lines",
+        //             line: {
+        //                 dash: 'dash',
+        //                 width: 2,
+        //                 color: Frames[i].FrameColour
+        //             },
+        //             x: [ctAxisPosition[1], PointPosition[1], ctAxisPosition[1]],
+        //             y: [xAxisPosition[0], PointPosition[0], ctAxisPosition[0]]
+        //         });
+
+        //     }
+            
+        // }
+
+
+
+        let FrameColours = [];
+        for (let i = 0; i< Frames.length; i++){
+            FrameColours.push(Frames[i].FrameColour);
+        }
+
+
+
         for (let i = 0; i < Events.length; i++){
-            Temporary = Events[i].GetDrawData(this.FrameID, Betas, Gammas);
+            Temporary = Events[i].GetDrawData(this.FrameID, Betas, Gammas, FrameColours);
             for (let j = 0; j < Temporary.length; j++){
                 PlotData.push(Temporary[j]);
             }
@@ -150,7 +187,7 @@ class Event{
         this.Name = Name;
         this.TableRow = TableRow;
         this.Position = LorentzTransform(Position, -BetaForPosition, GetGamma(-BetaForPosition));
-        this.AxisPoints = this.GetAxisPoints(this.Position); //nothing special here, just
+        //this.AxisPoints = this.GetAxisPoints(this.Position); //nothing special here, just
         //the points corresponding to the axis points if beta is 0.  They can be 
         //transformed with a lorentz transformation later.
         this.EventColour = EventColour;
@@ -166,30 +203,65 @@ class Event{
         return [ctDash, xDash];
     }
 
-    GetAxisPoints(Position){
+    GetAxisPoints(Position, Betas, Gammas){
+        //betas of frames you want axis points in 
+        let TempTransformedPosition;
+        let TempctAxisPosition;
+        let TempxAxisPosition;
+        let xAxisPositions = [];
+        let ctAxisPositions = [];
+
+        for (let i = 0; i< Betas.length; i++){
+            TempTransformedPosition = LorentzTransform(Position, Betas[i], Gammas[i]);
+            TempctAxisPosition = [TempTransformedPosition[0], 0];
+            TempxAxisPosition = [0, TempTransformedPosition[1]];
+            
+            TempctAxisPosition = LorentzTransform(TempctAxisPosition, -Betas[i], Gammas[i]);
+            TempxAxisPosition = LorentzTransform(TempxAxisPosition, -Betas[i], Gammas[i]);
+
+            ctAxisPositions.push(TempctAxisPosition);
+            xAxisPositions.push(TempxAxisPosition);
+        }
+
+        return [ctAxisPositions, xAxisPositions];
+    }
+
+    GetAxisPoints2(Position, Beta){
         let ctAxisPoint = [Position[0], 0];
         let xAxisPoint = [0, Position[1]];
 
         return [ctAxisPoint, xAxisPoint];
     }
 
-    GetDrawData(ID, Betas, Gammas){
+    GetDrawData(ID, Betas, Gammas, FrameColours){
         //ID is the index of the beta we are drawing the point with.
         let PositionToPlot = this.GetTransformedPosition(Betas[ID], Gammas[ID]);
         //ctAxisPositionToPlot.push([this.GetTransformedPosition(Beta, Gamma, this.AxisPoints[0]), this.GetTransformedPosition(Beta, Gamma, this.AxisPoints[1])]);
 
         let DrawData = [];
 
-        let ctAxisPositionToPlot;
-        let xAxisPositionToPlot;
-        for (let i = 0; i<Betas.length; i++){
-            //if (i != ID){
+        let Betas2 = [];
+        let Gammas2 = [];
+        for (let i = 0; i< Betas.length; i++){
+            Betas2[i] = Betas[i] - Betas[ID];
+            Gammas2[i] = GetGamma(Betas2[i]);
+        }
+
+        let AxisPoints = this.GetAxisPoints(PositionToPlot, Betas2, Gammas2);
+        let ctAxisPositions = AxisPoints[0];
+        let xAxisPositions = AxisPoints[1];
+        
+        for (let i = 0; i<ctAxisPositions.length; i++){
+            if (i != ID){
                 
-                ctAxisPositionToPlot = this.GetTransformedPosition(Betas[i], Gammas[i], this.AxisPoints[0]);
-                xAxisPositionToPlot = this.GetTransformedPosition(Betas[i], Gammas[i], this.AxisPoints[1]);
-                console.log(this.Name);
-                console.log(i);
-                console.log(ctAxisPositionToPlot);
+                // ctAxisPositionToPlot = LorentzTransform(this.AxisPoints[0], Betas[ID], Gammas[ID]);
+                // xAxisPositionToPlot = LorentzTransform(this.AxisPoints[1], Betas[ID], Gammas[ID]);
+                
+                // ctAxisPositionToPlot = this.GetTransformedPosition(Betas2[i], Gammas[i], this.AxisPoints[0]);
+                // xAxisPositionToPlot = this.GetTransformedPosition(Betas2[i], Gammas[i], this.AxisPoints[1]);
+
+                // ctAxisPositionToPlot = this.GetTransformedPosition(Betas2[i], Gammas2[i], ctAxisPositionToPlot);
+                // xAxisPositionToPlot = this.GetTransformedPosition(Betas2[i], Gammas2[i], xAxisPositionToPlot);
 
                 DrawData.push({//push dotted line stuff
                     type: "scatter",
@@ -197,12 +269,12 @@ class Event{
                     line: {
                         dash: 'dash',
                         width: 2,
-                        color: this.EventColour
+                        color: FrameColours[ID]
                     },
-                    x: [xAxisPositionToPlot[1], PositionToPlot[1], ctAxisPositionToPlot[1]],
-                    y: [xAxisPositionToPlot[0], PositionToPlot[0], ctAxisPositionToPlot[0]]
+                    x: [ctAxisPositions[i][1], PositionToPlot[1], xAxisPositions[i][1]],
+                    y: [ctAxisPositions[i][0], PositionToPlot[0], xAxisPositions[i][0]]
                 });
-            //}
+            }
         }
         
 
