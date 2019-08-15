@@ -38,35 +38,6 @@ class SpaceTimeDiagram{
 
         let Temporary;
 
-
-        // for (let i = 0; i< Events.length; i++){
-        //     for (let j = 0; j< Betas.length; j++){
-        //         let PointPosition = Events[i].GetTransformedPosition(Betas[j], Gammas[j]);
-        //         let ctAxisPosition = Events[i].AxisPoints[0];
-        //         let xAxisPosition = Events[i].AxisPoints[1];
-        //         ctAxisPosition = LorentzTransform(ctAxisPosition, Betas[j], Gammas[j]);
-        //         xAxisPosition = LorentzTransform(xAxisPosition, Betas[j], Gammas[j]);
-
-                
-
-        //         PlotData.push({//push dotted line stuff
-        //             type: "scatter",
-        //             mode: "lines",
-        //             line: {
-        //                 dash: 'dash',
-        //                 width: 2,
-        //                 color: Frames[i].FrameColour
-        //             },
-        //             x: [ctAxisPosition[1], PointPosition[1], ctAxisPosition[1]],
-        //             y: [xAxisPosition[0], PointPosition[0], ctAxisPosition[0]]
-        //         });
-
-        //     }
-            
-        // }
-
-
-
         let FrameColours = [];
         for (let i = 0; i< Frames.length; i++){
             FrameColours.push(Frames[i].FrameColour);
@@ -253,16 +224,6 @@ class Event{
         
         for (let i = 0; i<ctAxisPositions.length; i++){
             if (i != ID){
-                
-                // ctAxisPositionToPlot = LorentzTransform(this.AxisPoints[0], Betas[ID], Gammas[ID]);
-                // xAxisPositionToPlot = LorentzTransform(this.AxisPoints[1], Betas[ID], Gammas[ID]);
-                
-                // ctAxisPositionToPlot = this.GetTransformedPosition(Betas2[i], Gammas[i], this.AxisPoints[0]);
-                // xAxisPositionToPlot = this.GetTransformedPosition(Betas2[i], Gammas[i], this.AxisPoints[1]);
-
-                // ctAxisPositionToPlot = this.GetTransformedPosition(Betas2[i], Gammas2[i], ctAxisPositionToPlot);
-                // xAxisPositionToPlot = this.GetTransformedPosition(Betas2[i], Gammas2[i], xAxisPositionToPlot);
-
                 DrawData.push({//push dotted line stuff
                     type: "scatter",
                     mode: "lines",
@@ -357,21 +318,6 @@ class Table{
         }
     }
 
-    // UpdateTable(){
-    //     let Events = [];
-    //     let x;
-    //     let ct;
-    //     for (let i = 1; i < (MaxEvents+1); i++){
-    //         x =  parseFloat(document.getElementById("EventTable").rows[i].cells[0].innerHTML);
-    //         ct = parseFloat(document.getElementById("EventTable").rows[i].cells[1].innerHTML);
-    
-    //         if (!(isNaN(x) && isNaN(ct))){
-    //             //Events.push([x, ct, xDash, ctDash]);
-    //             Events.push(new Event(i, ct, x, Betas));
-    //         }
-    //     }
-    // }
-
     GetAllEvents(MaxEvents, Betas, Gammas){ //consider making the table an object...
         let Events = [];
 
@@ -391,10 +337,6 @@ class Table{
     
         return Events;
     }
-    
-    
-    
-
 }
 
 
@@ -459,11 +401,6 @@ function Setup(){
         $("#" + $(this).attr("id") + "Display").text($(this).val() + $("#" + $(this).attr("id") + "Display").attr("data-unit"));
         Main(NewPlots = false, ClearTable = false);
     });
-
-    // $('#ObjectBetaController').on("input", function(){
-    //     $("#" + $(this).attr("id") + "Display").text($(this).val() + $("#" + $(this).attr("id") + "Display").attr("data-unit"));
-    //     Main();
-    // });
 
     $("#SubmitButton").on("click", function(){
         let x = parseFloat(document.getElementById("EventX").value);
