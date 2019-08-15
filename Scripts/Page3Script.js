@@ -1,92 +1,93 @@
 /*jshint esversion: 7 */
 
-class SpaceTimeDiagram{
-    constructor(Name, Frames, Events, FrameID){
-        this.Name = Name;//name of graph to link to html
-        this.Frames = Frames;//an array of frames
-        this.Events = Events;//an array of events
-        this.FrameID = FrameID;  //assigns a particular frame to be the frame of this diagram
-        //this.FrameColourList = FrameColourList;
-    }
+// class SpaceTimeDiagram{
+//     constructor(Name, Frames, Events, FrameID){
+//         this.Name = Name;//name of graph to link to html
+//         this.Frames = Frames;//an array of frames
+//         this.Events = Events;//an array of events
+//         this.FrameID = FrameID;  //assigns a particular frame to be the frame of this diagram
+//         //this.FrameColourList = FrameColourList;
+//     }
 
-    GetGraphData(){
-        let Frames = this.Frames;
-        let Events = this.Events;
+//     GetGraphData(){
+//         let Frames = this.Frames;
+//         let Events = this.Events;
         
-        let DiagramData = [];
-        let n0;
-        let n1;
-        let CurrentData;
-        console.log("frameid");
-        console.log(this.FrameID);
-        for (let i = 0; i<Frames.length; i++){
-            CurrentData = Frames[i].GetPlotData();
-            n0 = 2*this.FrameID;
-            n1 = n0 + 1;
-            //console.log([n0, n1]);
-            //for (let j = 0; j<CurrentData.length; j++){
-            DiagramData.push(CurrentData[n0]);
-            DiagramData.push(CurrentData[n1]);
-            //}
-        }
+//         let DiagramData = [];
+//         let n0;
+//         let n1;
+//         let CurrentData;
+//         console.log("frameid");
+//         console.log(this.FrameID);
+//         for (let i = 0; i<Frames.length; i++){
+//             CurrentData = Frames[i].GetPlotData();
+//             n0 = 2*this.FrameID;
+//             n1 = n0 + 1;
+//             //console.log([n0, n1]);
+//             //for (let j = 0; j<CurrentData.length; j++){
+//             DiagramData.push(CurrentData[n0]);
+//             DiagramData.push(CurrentData[n1]);
+//             //}
+//         }
 
-        // for (let i = 0; i<Events.length; i++){
-        //     CurrentData = Events[i].GetPlotData();
-        //     for (let j = 0; j<CurrentData.length; j++){
-        //         DiagramData.push(CurrentData[j]);
-        //     }
-        // }
+//         // for (let i = 0; i<Events.length; i++){
+//         //     CurrentData = Events[i].GetPlotData();
+//         //     for (let j = 0; j<CurrentData.length; j++){
+//         //         DiagramData.push(CurrentData[j]);
+//         //     }
+//         // }
 
-        //console.log(DiagramData);
-        return DiagramData;
-    }
+//         //console.log(DiagramData);
+//         return DiagramData;
+//     }
 
-    // UpdateBetas(NewBetas){
-    //     this.Betas = NewBetas;
-    // }
-    UpdateFrames(NewFrames){//is this the right way of doing this?
-        this.Frames = NewFrames;
-    }
+//     // UpdateBetas(NewBetas){
+//     //     this.Betas = NewBetas;
+//     // }
+//     UpdateFrames(NewFrames){//is this the right way of doing this?
+//         this.Frames = NewFrames;
+//     }
 
-    UpdateEvents(NewEvents){
-        this.Events = NewEvents;
-    }
+//     UpdateEvents(NewEvents){
+//         this.Events = NewEvents;
+//     }
 
-    NewPlot(DiagramData){
-        Plotly.purge(this.Name);
+//     NewPlot(DiagramData){
+//         Plotly.purge(this.Name);
 
-        let xLabel = this.Frames[this.FrameID].AxisNames[0];
-        let ctLabel = this.Frames[this.FrameID].AxisNames[1];
+//         let xLabel = this.Frames[this.FrameID].AxisNames[0];
+//         let ctLabel = this.Frames[this.FrameID].AxisNames[1];
 
-        Plotly.newPlot(this.Name, DiagramData, this.SetLayout(xLabel, ctLabel));
-    }
+//         Plotly.newPlot(this.Name, DiagramData, this.SetLayout(xLabel, ctLabel));
+//     }
 
-    React(DiagramData){
-        let xLabel = this.Frames[this.FrameID].AxisNames[0];
-        let ctLabel = this.Frames[this.FrameID].AxisNames[1];
+//     React(DiagramData){
+//         let xLabel = this.Frames[this.FrameID].AxisNames[0];
+//         let ctLabel = this.Frames[this.FrameID].AxisNames[1];
 
-        Plotly.react(this.Name, DiagramData, this.SetLayout(xLabel, ctLabel));
-    }
+//         Plotly.react(this.Name, DiagramData, this.SetLayout(xLabel, ctLabel));
+//     }
 
-    SetLayout(sometitlex, sometitley) {
-        const new_layout = {
-            autosize: true,
-            margin: {l: 45, r: 30, t: 30, b: 30},
-            hovermode: "closest",
-            showlegend: false,
-            xaxis: {range: [-100, 100], zeroline: true, title: sometitlex},
-            yaxis: {range: [-100, 100], zeroline: true, title: sometitley},
-            aspectratio: {x: 1, y: 1}
-        };
-        return new_layout;
-    }
+//     SetLayout(sometitlex, sometitley) {
+//         const new_layout = {
+//             autosize: true,
+//             margin: {l: 45, r: 30, t: 30, b: 30},
+//             hovermode: "closest",
+//             showlegend: false,
+//             xaxis: {range: [-100, 100], zeroline: true, title: sometitlex},
+//             yaxis: {range: [-100, 100], zeroline: true, title: sometitley},
+//             aspectratio: {x: 1, y: 1}
+//         };
+//         return new_layout;
+//     }
     
-}
+// }
 
 class Frame{
-    constructor(xLimits, ctLimits, FrameColour, AxisNames, Betas){
+    constructor(xLimits, ctLimits, FrameColour, AxisNames, Betas, FrameBeta){
         //philosophy:  there are two frames on the screen, each seen in 2 different ways
         //set up coordinates of endpoints of lines that make axes
+        //consider adding this.origin to allow for frame translation
         this.N = [0,ctLimits[1]];
         this.S = [0, ctLimits[0]];
         this.W = [xLimits[0], 0];
@@ -95,6 +96,7 @@ class Frame{
         this.AxisNames = AxisNames; //an array of two strings, x axis name then ct axis name.
         //this.FrameID = FrameID;  //assigns a beta to this frame.  Index of desired beta in Betas
         this.Betas = Betas; //frame data will be produced in same order as betas.
+        this.FrameBeta = FrameBeta;
     }
 
     // GetPlotData(){
@@ -141,6 +143,11 @@ class Frame{
        
     //     return Data;
     // }
+    DrawFrame(Frames, Events, GraphID){
+        let FrameBeta = this.FrameBeta;
+
+
+    }
 
     GetPlotData(Betas = this.Betas){
         console.log("betas");
@@ -215,6 +222,14 @@ class Frame{
             Gammas.push(CurrentGamma);
         }
         return Gammas;
+    }
+
+    React(Data){
+        plotly.react(this.GraphName, Data, this.SetLayout(xLabel, ctLabel));
+    }
+
+    NewPlot(Data){
+        Plotly.newPlot(this.GraphName, Data, this.SetLayout(xLabel, ctLabel));
     }
 }
 
